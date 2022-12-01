@@ -13,31 +13,63 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
   Stream<CalculatorState> mapEventToState(
     CalculatorEvent event,
   ) async* {
-    if (event is CalculatorEventReset) {
-      yield CalculatorState(
-        firstNumber: '0',
-        secondNumber: '0',
-        mathResult: '0',
-        operation: ' ',
-      );
-    } else if (event is CalculatorEventAdd) {
-      yield CalculatorState(
-        firstNumber: (state.firstNumber == '0')
-            ? event.number
-            : state.firstNumber + event.number,
-        secondNumber: state.secondNumber,
-        mathResult: state.mathResult,
-        operation: state.operation,
-      );
-    } else if (event is CalculatorEventSubstract) {
-      yield CalculatorState(
-        firstNumber: (state.firstNumber != null && state.firstNumber.length > 0)
-            ? state.firstNumber.substring(0, state.firstNumber.length - 1)
-            : state.firstNumber,
-        secondNumber: state.secondNumber,
-        mathResult: state.mathResult,
-        operation: state.operation,
-      );
+    //Reset all
+    if (event is ResetAC) {
+      yield* this.resetAC();
+
+      //Add number
+    } else if (event is AddNumber) {
+      yield* this._addNumber(event.number);
+
+      //Substract number
+    } else if (event is SubstractNumber) {
+      yield* this._subtractNumber();
     }
+
+    //Change negative positive
+    else if (event is ChangeNegativePositive) {
+      yield* this._changeNegativePositive();
+    }
+  }
+
+  Stream<CalculatorState> _addNumber(String number) async* {
+    yield state.copyWith(
+      firstNumber:
+          (state.firstNumber == '0') ? number : state.firstNumber + number,
+    );
+  }
+
+  Stream<CalculatorState> _subtractNumber() async* {
+    yield state.copyWith(
+      firstNumber: (state.firstNumber.length > 1)
+          ? state.firstNumber.substring(0, state.firstNumber.length - 1)
+          : '0',
+    );
+  }
+
+  Stream<CalculatorState> resetAC() async* {
+    yield state.copyWith(
+      firstNumber: '0',
+      secondNumber: '0',
+      mathResult: '0',
+      operation: 'none',
+    );
+  }
+
+  Stream<CalculatorState> _changeNegativePositive() async* {
+    yield state.copyWith(
+      firstNumber: (state.firstNumber.contains('-'))
+          ? state.firstNumber.substring(1, state.firstNumber.length)
+          : '-' + state.firstNumber,
+    );
+  }
+
+  Stream<CalculatorState> _operationEntry() async* {
+    yield state.copyWith(
+      firstNumber: '0',
+      secondNumber: state.firstNumber,
+      mathResult: '0',
+      operation: 'none',
+    );
   }
 }
